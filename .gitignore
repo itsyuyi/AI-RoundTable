@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+logs/*
+!logs/.gitkeep
+custom_personas.json
+.DS_Store
