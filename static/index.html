@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI ROUNDTABLE · 睿思圆桌</title>
+<style>
+:root {
+  --bg:#06060e; --bg-card:#0e0e1a; --bg-hover:#16162a;
+  --border:#1e1e38; --border-accent:#2a2a4a;
+  --text:#b0b0c8; --text-dim:#5c5c7a; --text-bright:#e0e0f0;
+  --accent:#818cf8; --accent2:#c084fc;
+  --gold:#d4a853; --success:#22c55e; --danger:#ef4444; --warn:#f59e0b;
+  --radius:10px; --radius-sm:6px;
+  --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  --shadow: 0 8px 32px rgba(0,0,0,.5);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);height:100vh;display:flex;overflow:hidden}
+
+/* ═══════════════════ SIDEBAR ═══════════════════ */
+.sidebar{width:380px;min-width:380px;background:var(--bg-card);border-right:1px solid var(--border);display:flex;flex-direction:column;z-index:10}
+.side-hd{padding:16px 20px 12px;border-bottom:1px solid var(--border)}
+.side-hd .logo{font-size:20px;font-weight:800;color:var(--text-bright);letter-spacing:-.5px}
+.side-hd .sub{font-size:11px;color:var(--text-dim);margin-top:2px}
+.side-scroll{flex:1;overflow-y:auto;padding:12px 16px}
+.side-scroll::-webkit-scrollbar{width:4px}
+.side-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+
+/* ── Section ────────────── */
+.sec{margin-bottom:16px}
+.sec-label{font-size:10px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-dim);margin-bottom:6px;font-weight:700}
+
+/* ── Domain Chips ───────── */
+.domains{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.dchip{padding:3px 10px;background:var(--bg);border:1px solid var(--border);border-radius:14px;font-size:11px;cursor:pointer;transition:all .12s;color:var(--text);white-space:nowrap}
+.dchip:hover{border-color:var(--accent);color:var(--text-bright)}
+.dchip.active{background:rgba(129,140,248,.12);border-color:var(--accent);color:var(--accent);font-weight:600}
+.dchip .cnt{font-size:9px;opacity:.5;margin-left:2px}
+
+/* ── Tags ────────────────── */
+.tag-list{display:flex;flex-wrap:wrap;gap:4px;max-height:90px;overflow-y:auto}
+.tag-list::-webkit-scrollbar{width:3px}
+.tag-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.tchip{padding:2px 8px;background:var(--bg);border:1px solid var(--border);border-radius:12px;font-size:10px;cursor:pointer;transition:all .12s;color:var(--text-dim)}
+.tchip:hover{color:var(--text-bright);border-color:var(--accent2)}
+.tchip.active{background:rgba(192,132,252,.1);border-color:var(--accent2);color:var(--accent2);font-weight:600}
+
+/* ── Search / Research ──── */
+.search-row{display:flex;gap:6px}
+.search-row input{flex:1;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-bright);font-size:13px;font-family:var(--font)}
+.search-row input:focus{outline:none;border-color:var(--accent)}
+.search-row input::placeholder{color:var(--text-dim);opacity:.4}
+.btn{padding:8px 14px;border:none;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap;transition:all .15s}
+.btn-m{background:linear-gradient(135deg,#6366f1,#818cf8);color:#fff;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+.btn-m:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(99,102,241,.4)}
+.btn-m:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-o{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-o:hover{border-color:var(--accent);color:var(--text-bright)}
+.btn-s{padding:4px 10px;font-size:10px}
+.btn-danger{color:var(--danger);border-color:rgba(239,68,68,.2)}
+.btn-danger:hover{border-color:var(--danger)}
+
+/* ── Persona Grid ────────── */
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.pcard{padding:8px 10px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer;transition:all .12s;position:relative;display:flex;align-items:center;gap:8px}
+.pcard:hover{border-color:var(--accent);background:var(--bg-hover)}
+.pcard.sel{border-color:var(--accent);background:rgba(99,102,241,.08)}
+.pcard .pav{font-size:18px;flex-shrink:0}
+.pcard .pinfo{flex:1;min-width:0}
+.pcard .pname{font-size:12px;font-weight:700;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pcard .pdom{font-size:9px;color:var(--text-dim)}
+.pcard .pcheck{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:16px;height:16px;border-radius:50%;border:2px solid var(--border);opacity:0;transition:all .15s;display:flex;align-items:center;justify-content:center}
+.pcard.sel .pcheck{opacity:1;background:var(--accent);border-color:var(--accent)}
+.pcard.sel .pcheck::after{content:'✓';font-size:10px;color:#fff}
+
+/* ── Footer ──────────────── */
+.foot{padding:12px 16px 16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:8px}
+.mode-row{display:flex;gap:6px}
+.mode-btn{padding:6px 12px;background:var(--bg);border:1px solid var(--border);border-radius:16px;font-size:11px;cursor:pointer;color:var(--text);transition:all .12s;font-family:var(--font)}
+.mode-btn:hover{border-color:var(--accent);color:var(--text-bright)}
+.mode-btn.active{background:rgba(212,168,83,.1);border-color:var(--gold);color:var(--gold);font-weight:600}
+.btn-l{width:100%;padding:12px;font-size:15px;border-radius:var(--radius);background:linear-gradient(135deg,#7c3aed,#6366f1);color:#fff;font-weight:700;box-shadow:0 4px 16px rgba(124,58,237,.3)}
+.btn-l:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(124,58,237,.45)}
+.btn-l:disabled{opacity:.4;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ═══════════════════ MAIN ═══════════════════ */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:var(--text-dim);text-align:center;padding:40px}
+.empty .eicon{font-size:72px;opacity:.3;margin-bottom:8px}
+.empty h2{font-size:22px;color:var(--text-bright);font-weight:700}
+.empty p{font-size:13px;max-width:420px;line-height:1.7}
+
+/* ── Roundtable View ─────── */
+.rt-view{display:none;flex-direction:column;flex:1;overflow:hidden}
+.rt-view.active{display:flex}
+.rt-top{padding:14px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0;background:var(--bg-card)}
+.rt-topic{padding:5px 14px;background:var(--bg);border:1px solid var(--border);border-radius:20px;font-size:13px;font-weight:600;color:var(--text-bright);max-width:400px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt-mode{font-size:11px;padding:4px 10px;border-radius:12px;background:rgba(212,168,83,.1);color:var(--gold);font-weight:600;border:1px solid rgba(212,168,83,.2)}
+.rt-rounds{margin-left:auto;display:flex;gap:6px;align-items:center}
+.rdot{width:7px;height:7px;border-radius:50%;background:var(--border);transition:all .3s}
+.rdot.done{background:var(--accent)}
+.rdot.current{background:var(--accent);box-shadow:0 0 8px var(--accent)}
+
+.rban{display:none;padding:12px 24px;background:var(--bg-card);border-bottom:1px solid var(--border);flex-shrink:0;animation:fadeIn .3s ease}
+.rban.show{display:flex;align-items:center;gap:12px}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.rban .rnum{font-size:32px;font-weight:900;color:var(--accent);opacity:.25;min-width:40px;text-align:center}
+.rban h3{font-size:14px;color:var(--text-bright);font-weight:700}
+.rban .rdesc{font-size:11px;color:var(--text-dim)}
+
+.rt-stream{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+.rt-stream::-webkit-scrollbar{width:5px}
+.rt-stream::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px}
+
+/* ── Message cards ───────── */
+.msg{padding:0;border-radius:var(--radius);overflow:hidden;animation:slideIn .3s ease;border:1px solid var(--border)}
+@keyframes slideIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:none}}
+.msg-head{padding:10px 14px;display:flex;align-items:center;gap:8px;border-bottom:1px solid rgba(255,255,255,.05)}
+.msg-av{font-size:22px}
+.msg-name{font-weight:700;font-size:13px;color:var(--text-bright)}
+.msg-domain{font-size:10px;padding:2px 8px;border-radius:10px;background:var(--bg);border:1px solid var(--border);margin-left:6px}
+.msg-round{font-size:10px;color:var(--text-dim);margin-left:auto}
+.msg-body{padding:14px 16px;font-size:13px;line-height:1.8;color:var(--text);white-space:pre-wrap}
+.msg-body p{margin-bottom:6px}
+.msg-body p:last-child{margin-bottom:0}
+.msg.moderator{border-color:rgba(212,168,83,.4);background:linear-gradient(135deg,rgba(212,168,83,.05),rgba(129,140,248,.05))}
+.msg.moderator .msg-head{border-bottom-color:rgba(212,168,83,.15)}
+.msg.moderator .msg-name{color:var(--gold)}
+
+.typing{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--bg-card);border:1px dashed var(--border);border-radius:var(--radius);font-size:11px;color:var(--text-dim)}
+.typing .td{display:flex;gap:3px}
+.typing .td span{width:4px;height:4px;border-radius:50%;background:var(--accent);animation:tb 1.2s infinite}
+.typing .td span:nth-child(2){animation-delay:.15s}
+.typing .td span:nth-child(3){animation-delay:.3s}
+@keyframes tb{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-5px);opacity:1}}
+
+/* ── Modal ────────────────── */
+.modal-over{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:center;justify-content:center}
+.modal-over.show{display:flex}
+.modal{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:24px 28px;width:480px;max-width:92vw;max-height:85vh;overflow-y:auto;box-shadow:var(--shadow)}
+.modal::-webkit-scrollbar{width:4px}
+.modal::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.modal h3{font-size:16px;color:var(--text-bright);margin-bottom:16px}
+.modal .field{margin-bottom:12px}
+.modal .field label{display:block;font-size:11px;color:var(--text-dim);margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.modal .field input,.modal .field textarea,.modal .field select{width:100%;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-bright);font-size:13px;font-family:var(--font)}
+.modal .field input:focus,.modal .field textarea:focus,.modal .field select:focus{outline:none;border-color:var(--accent)}
+.modal .field textarea{resize:vertical;min-height:60px}
+.modal .field select{appearance:none;-webkit-appearance:none;cursor:pointer}
+.modal .field-row{display:flex;gap:8px}
+.modal .field-row>*{flex:1}
+.modal .tgs{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px}
+.modal .tgs .t{font-size:10px;padding:2px 8px;background:rgba(192,132,252,.1);border:1px solid rgba(192,132,252,.3);border-radius:10px;color:var(--accent2);display:inline-flex;align-items:center;gap:4px;cursor:pointer}
+.modal .tgs .t:hover{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.3);color:var(--danger)}
+.modal .btn-row{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal .btn-row .btn{font-size:13px;padding:9px 20px}
+
+/* Persp info card in research result */
+.result-card{padding:14px;background:var(--bg);border:1px solid var(--border-accent);border-radius:var(--radius);margin-top:8px;animation:fadeIn .3s ease}
+.result-card .rc-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.result-card .rc-av{font-size:28px}
+.result-card .rc-name{font-weight:700;font-size:15px;color:var(--text-bright)}
+.result-card .rc-title{font-size:11px;color:var(--text-dim);margin-top:2px}
+.result-card .rc-tags{margin:8px 0;display:flex;flex-wrap:wrap;gap:4px}
+.result-card .rc-tags span{padding:2px 8px;background:rgba(129,140,248,.08);border:1px solid rgba(129,140,248,.2);border-radius:10px;font-size:10px;color:var(--accent)}
+.result-card .rc-fw{font-size:11px;color:var(--text-dim);margin-top:6px;line-height:1.5}
+.result-card .rc-add-btn{margin-top:10px}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ SIDEBAR ═══════════════════════ -->
+<aside class="sidebar">
+ <div class="side-hd">
+  <div class="logo">🏛️ AI ROUNDTABLE</div>
+  <div class="sub">睿思圆桌 — 跨界智识对话平台</div>
+ </div>
+ <div class="side-scroll">
+
+  <!-- Domain filter -->
+  <div class="sec">
+   <div class="sec-label">🌐 领域</div>
+   <div class="domains" id="domains"></div>
+  </div>
+
+  <!-- Tag filter -->
+  <div class="sec">
+   <div class="sec-label">🏷️ 标签</div>
+   <div class="tag-list" id="tag-list"></div>
+  </div>
+
+  <!-- Research -->
+  <div class="sec">
+   <div class="sec-label">🔍 智能研究人物</div>
+   <div class="search-row">
+    <input id="research-inp" placeholder="输入人物姓名... (如: 屠呦呦, Ray Dalio)" onkeydown="if(event.key==='Enter')doResearch()">
+    <button class="btn btn-m" onclick="doResearch()">研究</button>
+   </div>
+   <div id="research-result"></div>
+  </div>
+
+  <!-- Persona Grid -->
+  <div class="sec">
+   <div class="sec-label" style="display:flex;align-items:center;justify-content:space-between">
+    <span>👥 人物库 (<span id="persona-count">0</span>)</span>
+    <button class="btn btn-o btn-s" onclick="openCustomModal()">+ 自定义</button>
+   </div>
+   <div class="pgrid" id="pgrid"></div>
+  </div>
+
+ </div>
+
+ <!-- Footer with controls -->
+ <div class="foot">
+  <div class="mode-row">
+   <button class="mode-btn active" data-mode="圆桌讨论" onclick="setMode(this)">💬 圆桌讨论</button>
+   <button class="mode-btn" data-mode="跨界头脑风暴" onclick="setMode(this)">⚡ 头脑风暴</button>
+   <button class="mode-btn" data-mode="关键决策" onclick="setMode(this)">🎯 关键决策</button>
+  </div>
+  <textarea id="topic-inp" class="search-row" style="resize:none;height:48px" placeholder="议题: 如「中国老龄化社会的商业机遇与挑战」" rows="2"></textarea>
+  <button class="btn btn-l" id="go-btn" onclick="startRoundtable()">✨ 召集圆桌会</button>
+ </div>
+</aside>
+
+<!-- ═══════════════════════ MAIN ═══════════════════════ -->
+<main class="main">
+ <div class="empty" id="empty">
+  <div class="eicon">🏛️</div>
+  <h2>欢迎来到睿思圆桌</h2>
+  <p>选择跨领域的顶尖头脑，设定议题，开启一场前所未有的智识对话。<br>支持金融、科技、哲学、医学、经济学等 12+ 领域，25+ 预置人物。</p>
+ </div>
+ <div class="rt-view" id="rt-view">
+  <div class="rt-top" id="rt-top"></div>
+  <div class="rban" id="rban"></div>
+  <div class="rt-stream" id="rt-stream"></div>
+ </div>
+</main>
+
+<!-- ═══════════════════════ CUSTOM PERSONA MODAL ═══════════════════════ -->
+<div class="modal-over" id="custom-modal">
+ <div class="modal">
+  <h3>👤 创建自定义人物</h3>
+  <div class="field"><label>ID *</label><input id="cm-id" placeholder="英文ID, 如 jobs"></div>
+  <div class="field"><label>姓名 *</label><input id="cm-name" placeholder="如 张三"></div>
+  <div class="field"><label>头衔 *</label><input id="cm-title" placeholder="如 某公司CEO"></div>
+  <div class="field-row">
+   <div class="field"><label>头像 Emoji</label><input id="cm-avatar" value="👤" style="text-align:center"></div>
+   <div class="field"><label>主题色</label><input id="cm-color" type="color" value="#6366f1" style="height:38px;padding:2px;cursor:pointer"></div>
+  </div>
+  <div class="field"><label>所属领域</label>
+   <select id="cm-domain">
+    <option>金融</option><option>科技</option><option>医疗</option><option>科学</option>
+    <option>哲学</option><option>经济学</option><option>管理</option><option>政治</option>
+    <option>文学</option><option>体育</option><option>媒体</option><option>时尚</option>
+    <option>艺术</option><option>教育</option><option>军事</option><option>法律</option>
+    <option>生活方式</option><option>综合</option>
+   </select>
+  </div>
+  <div class="field"><label>标签（逗号分隔）</label><input id="cm-tags" placeholder="如 创新,领导力,战略"></div>
+  <div class="field"><label>思维框架</label><input id="cm-framework" placeholder="如 第一性原理 · 极简主义"></div>
+  <div class="field"><label>System Prompt（定义思维方式和发言风格）</label>
+   <textarea id="cm-system" rows="4" placeholder="你是XXX，正在参加跨领域圆桌对话。思维框架：...发言风格：每次3-5句中文。"></textarea></div>
+  <div class="btn-row">
+   <button class="btn btn-o" onclick="closeCustomModal()">取消</button>
+   <button class="btn btn-m" onclick="saveCustomPersona()">保存</button>
+  </div>
+ </div>
+</div>
+
+<!-- ═══════════════════════ RESEARCH RESULT MODAL ═══════════════════════ -->
+<script>
+const API='';
+let personas=[], domains=[], tags=[], selected=new Set(), sMode='圆桌讨论', currSid=null, es=null;
+
+async function init(){
+ await Promise.all([loadPersonas(),loadDomains(),loadTags()]);
+ renderAll();
+}
+async function loadPersonas(){
+ try{const r=await fetch(API+'/api/personas');personas=await r.json();}catch(e){}
+}
+async function loadDomains(){
+ try{const r=await fetch(API+'/api/domains');domains=await r.json();}catch(e){}
+}
+async function loadTags(){
+ try{const r=await fetch(API+'/api/tags');tags=await r.json();}catch(e){}
+}
+
+function getFiltered(){
+ let p=personas;
+ const ad=document.querySelector('.dchip.active');
+ if(ad&&ad.dataset.domain) p=p.filter(x=>x.domain===ad.dataset.domain);
+ const at=document.querySelectorAll('.tchip.active');
+ if(at.length>0){ const ts=new Set([...at].map(e=>e.dataset.tag)); p=p.filter(x=>x.tags&&x.tags.some(t=>ts.has(t))); }
+ return p;
+}
+
+function renderAll(){
+ renderDomains(); renderTags(); renderGrid(); renderCount();
+}
+
+function renderDomains(){
+ const dc=document.getElementById('domains');
+ const ad=document.querySelector('.dchip.active');
+ let h='<span class="dchip active" data-domain="" onclick="selDomain(this)">全部</span>';
+ domains.forEach(d=>{
+  h+=`<span class="dchip${ad&&ad.dataset.domain===d.name?' active':''}" data-domain="${esc(d.name)}" onclick="selDomain(this)">${d.name}<span class="cnt">${d.count}</span></span>`;
+ });
+ dc.innerHTML=h;
+}
+function selDomain(el){
+ document.querySelectorAll('.dchip').forEach(c=>c.classList.remove('active'));
+ el.classList.add('active');
+ renderGrid();renderCount();
+}
+function renderTags(){
+ const tc=document.getElementById('tag-list');
+ let h='';
+ tags.forEach(t=>{
+  h+=`<span class="tchip${document.getElementById('tag-'+t.name)?.classList.contains('active')?' active':''}" data-tag="${esc(t.name)}" id="tag-${t.name}" onclick="toggleTag(this,'${esc(t.name)}')">${t.name}</span>`;
+ });
+ tc.innerHTML=h;
+}
+function toggleTag(el,name){
+ el.classList.toggle('active');
+ renderGrid();renderCount();
+}
+function renderGrid(){
+ const g=document.getElementById('pgrid');
+ const fp=getFiltered();
+ g.innerHTML=fp.map(p=>`<div class="pcard${selected.has(p.id)?' sel':''}" onclick="toggleSel('${p.id}')" title="${p.name} · ${p.framework||''}">
+  <span class="pav">${p.avatar}</span>
+  <div class="pinfo"><div class="pname">${esc(p.name)}</div><div class="pdom">${p.domain||''} ${p.is_custom?'· 自定义':''}</div></div>
+  <span class="pcheck"></span>
+ </div>`).join('');
+}
+function renderCount(){document.getElementById('persona-count').textContent=getFiltered().length}
+
+function toggleSel(pid){selected.has(pid)?selected.delete(pid):selected.add(pid);renderGrid();updateGo()}
+function setMode(el){
+ document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+ el.classList.add('active'); sMode=el.dataset.mode;
+}
+function updateGo(){
+ const t=document.getElementById('topic-inp').value.trim();
+ document.getElementById('go-btn').disabled=selected.size<2||!t;
+}
+document.getElementById('topic-inp').addEventListener('input',updateGo);
+
+// ── Research ─────────────────────────────────────────────
+async function doResearch(){
+ const name=document.getElementById('research-inp').value.trim();
+ if(!name)return;
+ const res=document.getElementById('research-result');
+ res.innerHTML='<div class="typing" style="margin-top:8px">🔍 正在研究「'+esc(name)+'」...</div>';
+ try{
+  const r=await fetch(API+'/api/research',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name})});
+  const d=await r.json();
+  if(d.found){
+   const p=d.persona;
+   res.innerHTML=`<div class="result-card">
+    <div class="rc-h"><span class="rc-av">${p.avatar}</span><div><div class="rc-name">${esc(p.name)}</div><div class="rc-title">${esc(p.title)}</div></div></div>
+    <div class="rc-tags">${(p.tags||[]).map(t=>'<span>'+esc(t)+'</span>').join('')}</div>
+    <div class="rc-fw"><strong>领域:</strong> ${esc(p.domain||'')} · <strong>框架:</strong> ${esc(p.framework||'')}</div>
+    <button class="btn btn-m rc-add-btn" onclick="addToSelected('${p.id}','${esc(p.name)}')">✅ 加入本次圆桌</button>
+   </div>`;
+  }else{
+   res.innerHTML=`<div class="result-card" style="border-color:var(--warn)">⚠️ ${d.message}</div>`;
+  }
+ }catch(e){
+  res.innerHTML='<div class="result-card" style="border-color:var(--danger)">❌ 研究失败</div>';
+ }
+}
+function addToSelected(pid,name){
+ selected.add(pid);renderGrid();updateGo();
+ document.getElementById('research-result').innerHTML=`<div style="margin-top:6px;font-size:12px;color:var(--success)">✅「${name}」已加入圆桌</div>`;
+}
+
+// ── Custom Persona ───────────────────────────────────────
+function openCustomModal(){document.getElementById('custom-modal').classList.add('show')}
+function closeCustomModal(){document.getElementById('custom-modal').classList.remove('show')}
+async function saveCustomPersona(){
+ const id=document.getElementById('cm-id').value.trim().toLowerCase();
+ const name=document.getElementById('cm-name').value.trim();
+ const title=document.getElementById('cm-title').value.trim();
+ if(!id||!name||!title){alert('请填写ID、姓名和头衔');return}
+ const payload={
+  id,name,title,
+  avatar:document.getElementById('cm-avatar').value.trim()||'👤',
+  color:document.getElementById('cm-color').value,
+  domain:document.getElementById('cm-domain').value,
+  tags:document.getElementById('cm-tags').value.split(',').map(s=>s.trim()).filter(Boolean),
+  framework:document.getElementById('cm-framework').value.trim(),
+  system:document.getElementById('cm-system').value.trim()
+ };
+ try{
+  const r=await fetch(API+'/api/personas',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  if(!r.ok){const e=await r.json();alert(e.error);return}
+  closeCustomModal();
+  await loadPersonas();await loadDomains();await loadTags();
+  renderAll();
+ }catch(e){alert('保存失败: '+e.message)}
+}
+
+// ── Start Roundtable ────────────────────────────────────
+async function startRoundtable(){
+ const topic=document.getElementById('topic-inp').value.trim();
+ if(selected.size<2||!topic)return;
+ document.getElementById('go-btn').disabled=true;
+ document.getElementById('go-btn').textContent='⏳ 召集圆桌中...';
+ document.getElementById('empty').style.display='none';
+ document.getElementById('rt-view').classList.add('active');
+ document.getElementById('rt-stream').innerHTML='';
+
+ const sp=personas.filter(p=>selected.has(p.id));
+ document.getElementById('rt-top').innerHTML=`
+  <span class="rt-topic">${esc(topic)}</span>
+  <span class="rt-mode">${sMode}</span>
+  <span style="font-size:11px;color:var(--text-dim)">${sp.length}位参与者</span>
+  <div class="rt-rounds"><span class="rdot" id="rd1"></span><span class="rdot" id="rd2"></span><span class="rdot" id="rd3"></span></div>`;
+
+ try{
+  const r=await fetch(API+'/api/roundtable',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic,persona_ids:[...selected],mode:sMode})});
+  const d=await r.json();
+  if(d.error){alert(d.error);resetUI();return}
+  currSid=d.session_id;
+  connectSSE(currSid);
+ }catch(e){alert('启动失败');resetUI()}
+}
+
+// ── SSE ──────────────────────────────────────────────────
+function connectSSE(sid){
+ if(es)es.close();
+ es=new EventSource(API+'/api/stream/'+sid);
+ es.onmessage=e=>{
+  try{handleEvent(JSON.parse(e.data))}catch(er){}
+ };
+ es.onerror=()=>{};
+}
+
+function handleEvent(ev){
+ const{type,data}=ev;
+ const stream=document.getElementById('rt-stream');
+ const banner=document.getElementById('rban');
+
+ switch(type){
+
+  case 'round_start':
+   banner.classList.add('show');
+   banner.innerHTML=`<div class="rnum">${data.round}</div><div><h3>${data.title}</h3><div class="rdesc">${data.description}</div></div>`;
+   for(let i=1;i<=3;i++){
+    const d=document.getElementById('rd'+i);
+    if(!d)continue;
+    d.classList.remove('done','current');
+    if(i<data.round)d.classList.add('done');
+    if(i===data.round)d.classList.add('current');
+   }
+   stream.querySelectorAll('.typing').forEach(e=>e.remove());
+   break;
+
+  case 'persona_thinking':{
+   const pid=data.persona_id;
+   const ex=document.getElementById('typing-'+pid);
+   if(!ex){
+    const el=document.createElement('div');el.id='typing-'+pid;el.className='typing';
+    el.innerHTML=`<span>${esc(data.name)} 正在思考...</span><div class="td"><span></span><span></span><span></span></div>`;
+    stream.appendChild(el);stream.scrollTop=stream.scrollHeight;
+   }
+   break;
+  }
+
+  case 'persona_response':{
+   const t=document.getElementById('typing-'+data.persona_id);if(t)t.remove();
+   const card=document.createElement('div');card.className='msg';card.style.borderLeftColor=data.color;
+   card.style.borderLeft='3px solid '+data.color;
+   card.innerHTML=`<div class="msg-head"><span class="msg-av">${data.avatar}</span><span class="msg-name">${esc(data.name)}</span><span class="msg-domain">${data.domain||''}</span><span class="msg-round">第${data.round}轮</span></div><div class="msg-body">${fmt(data.content)}</div>`;
+   stream.appendChild(card);stream.scrollTop=stream.scrollHeight;
+   break;
+  }
+
+  case 'moderator_report':{
+   stream.querySelectorAll('.typing').forEach(e=>e.remove());
+   const card=document.createElement('div');card.className='msg moderator';
+   card.innerHTML=`<div class="msg-head"><span style="font-size:18px">📊</span><span class="msg-name">主持人综合评述</span></div><div class="msg-body">${fmt(data.content)}</div>`;
+   stream.appendChild(card);stream.scrollTop=stream.scrollHeight;
+   break;
+  }
+
+  case 'session_complete':
+   stream.querySelectorAll('.typing').forEach(e=>e.remove());
+   for(let i=1;i<=3;i++){const d=document.getElementById('rd'+i);if(d){d.classList.remove('current');d.classList.add('done');}}
+   banner.classList.add('show');
+   banner.innerHTML=`<div class="rnum" style="color:var(--gold)">✓</div><div><h3>圆桌会结束</h3><div class="rdesc">可召集新一轮圆桌</div></div>`;
+   resetUI();break;
+
+  case 'error':alert(data.message);resetUI();break;
+ }
+}
+
+function resetUI(){
+ document.getElementById('go-btn').disabled=false;
+ document.getElementById('go-btn').textContent='✨ 召集圆桌会';
+ updateGo();
+}
+
+function fmt(t){
+ if(!t)return'';
+ return esc(t).split('\n').filter(l=>l.trim()).map(l=>`<p>${l}</p>`).join('');
+}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+
+document.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();startRoundtable()}});
+init();
+</script>
+</body>
+</html>
